@@ -1,16 +1,57 @@
 #include <iostream>
+#include <cmath>
+#include <set>
 #include <vector>
 #include <fstream>
 #include <string>
 #include <sstream>
+#include <stdlib.h>
+#include <time.h>
 using namespace std;
+
 
 struct instance{
 	float type;
 	vector<float> features;
 };
 
+double calcdist(instance a, instance b, set<int>currFeats){
+	double dist = 0.0;
+	for(auto it : currFeats){
+		dist += pow((a.features.at(it)-b.features.at(it)), 2.0);
+	}
+	return sqrt(dist);
+}
+
+double validation(vector<instance>data, set<int>currFeats, int feat_to_add){
+	/*Random Number to Test
+	double acc = rand()%100+1;
+	cout << "Accuracy: " << acc << endl
+	return acc; */
+	int nn = 0;
+	double accuracy, curr = 0;
+	double bestdist = 100.0;
+	currFeats.insert(feat_to_add);
+	for(int i=0; i<data.size(); ++i){
+		for(int j=0; j<data.size(); ++j){
+			if( i != j )
+				curr = calcdist(data.at(i),data.at(j),currFeats);
+			if(curr < bestdist){
+				nn = j;
+				bestdist = curr;
+			}
+		}
+		if (data.at(nn).type == data.at(i).type)
+			++accuracy;
+	}
+	cout << bestdist << endl;
+	cout << accuracy/data.size() << endl;;
+	return accuracy/data.size();
+}
+
 int main(int argc, char *argv[]){
+
+	//srand(time(0));
 	if (argc != 2){
 		cout << "Incorrect # of args" << endl;
 		return 0;
@@ -23,6 +64,10 @@ int main(int argc, char *argv[]){
 	}
 	string line;
 	vector<instance> data;
+	set<int> currFeatures;
+	set<int> bestFeatures;
+	int numFeatures = 0;
+	double bestAccuracy = 0.0;
 	
 	//Read input from file and create data vector
 	while (getline(fin,line)){
@@ -35,7 +80,43 @@ int main(int argc, char *argv[]){
 		}
 		data.push_back(curr);
 	}
-
+	
+	numFeatures = data.front().features.size();
+	for (int i=0; i<numFeatures; ++i){
+		cout << "On the " << i+1 << "th level of the search tree" 
+			<< endl;
+		int feature_to_add = -1;
+		double best_sofar_accuracy = 0.0;
+		
+		for (int j=0; j<numFeatures; ++j){
+			if (currFeatures.count(j) == 0){
+				cout << "Considering adding the " << j+1 
+					<< " feature" << endl;
+				double currAccuracy = validation(data,currFeatures,j);
+				if (currAccuracy > best_sofar_accuracy){
+					best_sofar_accuracy = currAccuracy;
+					feature_to_add = j;
+				}
+			}
+		}
+		
+		if (best_sofar_accuracy > bestAccuracy){
+			bestAccuracy = best_sofar_accuracy;
+			bestFeatures.insert(feature_to_add);
+		}
+		
+		if (feature_to_add >= 0){
+			currFeatures.insert(feature_to_add);
+			cout << "On level " << i+1 << " added feature " 
+				<< feature_to_add+1 << " to current set" << endl;
+		}
+	}	
+	
+	cout << "Best Features: {";
+	for (auto it : bestFeatures){
+		cout << it+1 << ",";
+	} cout << "}" << endl;
+	/*Print Data For Testing
 	for (int i=0; i < data.size(); ++i){
 		cout << i << ": ";
 		cout << data.at(i).type << " ";
@@ -44,7 +125,7 @@ int main(int argc, char *argv[]){
 		}
 		cout << endl;
 	}
-	
+	*/
 	return 0;
 }	
 
