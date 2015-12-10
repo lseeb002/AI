@@ -32,20 +32,24 @@ double validation(vector<instance>data, set<int>currFeats, int feat_to_add){
 	double accuracy, curr = 0;
 	double bestdist = 100.0;
 	currFeats.insert(feat_to_add);
+	cout << "Features currently testing: {";
+	for (auto it : currFeats){
+		cout << it+1 << ",";
+	}
+	cout << "}" << endl;
 	for(int i=0; i<data.size(); ++i){
 		for(int j=0; j<data.size(); ++j){
-			if( i != j )
+			if( i != j ){
 				curr = calcdist(data.at(i),data.at(j),currFeats);
-			if(curr < bestdist){
-				nn = j;
-				bestdist = curr;
+				if(curr < bestdist){
+					nn = j;
+					bestdist = curr;
+				}
 			}
 		}
 		if (data.at(nn).type == data.at(i).type)
 			++accuracy;
 	}
-	cout << bestdist << endl;
-	cout << accuracy/data.size() << endl;;
 	return accuracy/data.size();
 }
 
@@ -85,7 +89,7 @@ int main(int argc, char *argv[]){
 	for (int i=0; i<numFeatures; ++i){
 		cout << "On the " << i+1 << "th level of the search tree" 
 			<< endl;
-		int feature_to_add = -1;
+		int feature_to_add;
 		double best_sofar_accuracy = 0.0;
 		
 		for (int j=0; j<numFeatures; ++j){
@@ -93,16 +97,13 @@ int main(int argc, char *argv[]){
 				cout << "Considering adding the " << j+1 
 					<< " feature" << endl;
 				double currAccuracy = validation(data,currFeatures,j);
-				if (currAccuracy > best_sofar_accuracy){
+				cout << "Accuracy with new feature: " 
+					<< currAccuracy << endl;
+				if (currAccuracy >= best_sofar_accuracy){
 					best_sofar_accuracy = currAccuracy;
 					feature_to_add = j;
 				}
 			}
-		}
-		
-		if (best_sofar_accuracy > bestAccuracy){
-			bestAccuracy = best_sofar_accuracy;
-			bestFeatures.insert(feature_to_add);
 		}
 		
 		if (feature_to_add >= 0){
@@ -110,12 +111,17 @@ int main(int argc, char *argv[]){
 			cout << "On level " << i+1 << " added feature " 
 				<< feature_to_add+1 << " to current set" << endl;
 		}
+		if (best_sofar_accuracy >= bestAccuracy){
+                	bestAccuracy = best_sofar_accuracy;
+                	bestFeatures = currFeatures;
+                }
+
+		cout << "Best Features: {";
+		for (auto it : bestFeatures){
+			cout << it+1 << ",";
+		} cout << "}" << endl;
 	}	
 	
-	cout << "Best Features: {";
-	for (auto it : bestFeatures){
-		cout << it+1 << ",";
-	} cout << "}" << endl;
 	/*Print Data For Testing
 	for (int i=0; i < data.size(); ++i){
 		cout << i << ": ";
